@@ -1,0 +1,40 @@
+{
+    "manifest_version": 3,
+    "name": "Y Combinator Jobs Scraper",
+    "version": "1.0.0",
+    "description": "Scrape job listings from Y Combinator job boards and send to your API",
+    "permissions": [
+        "activeTab",
+        "storage",
+        "scripting"
+    ],
+    "host_permissions": [
+        "*://www.workatastartup.com/*",
+        "*://workatastartup.com/*",
+        "*://www.ycombinator.com/*",
+        "*://ycombinator.com/*",
+        "*://news.ycombinator.com/*"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "YC Jobs Scraper"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://www.workatastartup.com/*",
+                "*://workatastartup.com/*",
+                "*://www.ycombinator.com/*",
+                "*://ycombinator.com/*",
+                "*://news.ycombinator.com/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}

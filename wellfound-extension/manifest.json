@@ -1,0 +1,38 @@
+{
+    "manifest_version": 3,
+    "name": "Wellfound Jobs Scraper",
+    "version": "1.0.0",
+    "description": "Scrape job listings from Wellfound (AngelList) and send to your API",
+    "permissions": [
+        "activeTab",
+        "storage",
+        "scripting"
+    ],
+    "host_permissions": [
+        "*://wellfound.com/*",
+        "*://www.wellfound.com/*",
+        "*://angel.co/*",
+        "*://www.angel.co/*"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Wellfound Jobs Scraper"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://wellfound.com/*",
+                "*://www.wellfound.com/*",
+                "*://angel.co/*",
+                "*://www.angel.co/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}
