@@ -3,6 +3,8 @@
  */
 
 const $ = id => document.getElementById(id);
+const DEFAULT_API_URL = 'https://jobs-api.acrosstek.in';
+const DEFAULT_API_KEY = 'tmdAKfxWYVVIoJg950cX2dNJSasj/mOmoB1D0CSIpFI=';
 
 let scrapedJobs = [];
 
@@ -43,8 +45,8 @@ async function checkApiHealth() {
 
 async function loadSettings() {
     const result = await chrome.storage.sync.get(['apiUrl', 'apiKey']);
-    $('apiUrl').value = result.apiUrl || 'http://localhost:3001';
-    $('apiKey').value = result.apiKey || '';
+    $('apiUrl').value = result.apiUrl || DEFAULT_API_URL;
+    $('apiKey').value = result.apiKey || DEFAULT_API_KEY;
 }
 
 $('saveSettings').addEventListener('click', async () => {

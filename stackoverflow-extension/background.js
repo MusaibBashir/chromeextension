@@ -2,13 +2,14 @@
  * Stack Overflow Jobs Scraper - Background Service Worker
  */
 
-const DEFAULT_API_URL = 'http://localhost:3001';
+const DEFAULT_API_URL = 'https://jobs-api.acrosstek.in';
+const DEFAULT_API_KEY = 'tmdAKfxWYVVIoJg950cX2dNJSasj/mOmoB1D0CSIpFI=';
 
 async function getSettings() {
     const result = await chrome.storage.sync.get(['apiUrl', 'apiKey']);
     return {
         apiUrl: result.apiUrl || DEFAULT_API_URL,
-        apiKey: result.apiKey || null
+        apiKey: result.apiKey || DEFAULT_API_KEY
     };
 }
 
