@@ -42,7 +42,7 @@
                 // Extract skills
                 const skills = extractSkills(card.textContent);
 
-                if (title && jobUrl) {
+                if (title && jobUrl && company) {
                     jobs.push({
                         company,
                         title,

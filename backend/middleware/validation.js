@@ -7,7 +7,7 @@ const jobValidationSchema = Joi.object({
     company: Joi.string().required().max(200).trim(),
     title: Joi.string().required().max(300).trim(),
     location: Joi.string().max(200).trim().default('Not specified'),
-    source: Joi.string().required().valid('stackoverflow', 'ycombinator', 'wellfound', 'monster'),
+    source: Joi.string().required().valid('stackoverflow', 'ycombinator', 'wellfound', 'monster', 'linkedin'),
     skills: Joi.array().items(Joi.string().max(100).trim()).default([]),
     job_url: Joi.string().uri().required(),
     salary: Joi.string().max(100).allow(null, ''),
