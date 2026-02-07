@@ -19,7 +19,7 @@ const jobSchema = new mongoose.Schema({
   source: {
     type: String,
     required: true,
-    enum: ['stackoverflow', 'ycombinator', 'wellfound', 'monster'],
+    enum: ['stackoverflow', 'ycombinator', 'wellfound', 'monster', 'linkedin'],
     lowercase: true
   },
   skills: [{

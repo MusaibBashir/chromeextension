@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Job = require('../models/Job');
+const SyncState = require('../models/SyncState');
 const { validateJob, validateBatchJobs } = require('../middleware/validation');
 
 /**
@@ -221,6 +222,135 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to delete job',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/jobs/sync-to-n8n - Sync jobs to n8n since last sync
+ * Automatically tracks the last sync timestamp
+ */
+router.post('/sync-to-n8n', async (req, res) => {
+    try {
+        const { source, forceSince } = req.body;
+
+        // Get or create sync state
+        let syncState = await SyncState.findOne({ key: 'n8n_sync' });
+        if (!syncState) {
+            syncState = await SyncState.create({ key: 'n8n_sync' });
+        }
+
+        // Determine the "since" date
+        let sinceDate = syncState.lastSyncAt;
+        if (forceSince) {
+            sinceDate = new Date(forceSince);
+        }
+
+        // Build query
+        const query = {};
+        if (sinceDate) {
+            query.scraped_at = { $gt: sinceDate };
+        }
+        if (source) {
+            query.source = source.toLowerCase();
+        }
+
+        // Get jobs to sync
+        const jobs = await Job.find(query).sort({ scraped_at: 1 });
+
+        if (jobs.length === 0) {
+            return res.json({
+                success: true,
+                message: 'No new jobs to sync',
+                data: {
+                    synced: 0,
+                    lastSyncAt: syncState.lastSyncAt,
+                    nextSyncFrom: sinceDate
+                }
+            });
+        }
+
+        // Forward each job to n8n
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const job of jobs) {
+            const result = await forwardToN8n(job.toObject());
+            if (result) {
+                successCount++;
+            } else {
+                failCount++;
+            }
+        }
+
+        // Update sync state
+        const now = new Date();
+        syncState.lastSyncAt = now;
+        syncState.lastSyncCount = successCount;
+        syncState.totalSynced += successCount;
+        await syncState.save();
+
+        res.json({
+            success: true,
+            message: `Synced ${successCount} jobs to n8n`,
+            data: {
+                synced: successCount,
+                failed: failCount,
+                total: jobs.length,
+                lastSyncAt: now,
+                totalSyncedAllTime: syncState.totalSynced
+            }
+        });
+    } catch (error) {
+        console.error('Error syncing to n8n:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to sync jobs',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/jobs/sync-status - Get sync status
+ */
+router.get('/sync-status', async (req, res) => {
+    try {
+        let syncState = await SyncState.findOne({ key: 'n8n_sync' });
+
+        if (!syncState) {
+            return res.json({
+                success: true,
+                data: {
+                    lastSyncAt: null,
+                    lastSyncCount: 0,
+                    totalSynced: 0,
+                    pendingJobs: await Job.countDocuments()
+                }
+            });
+        }
+
+        // Count pending jobs (since last sync)
+        const pendingQuery = syncState.lastSyncAt
+            ? { scraped_at: { $gt: syncState.lastSyncAt } }
+            : {};
+        const pendingJobs = await Job.countDocuments(pendingQuery);
+
+        res.json({
+            success: true,
+            data: {
+                lastSyncAt: syncState.lastSyncAt,
+                lastSyncCount: syncState.lastSyncCount,
+                totalSynced: syncState.totalSynced,
+                pendingJobs
+            }
+        });
+    } catch (error) {
+        console.error('Error getting sync status:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get sync status',
             message: error.message
         });
     }
